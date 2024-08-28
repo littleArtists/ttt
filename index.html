@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            font-family: 'Roboto', sans-serif;
+            color: #333;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            margin: 20px auto;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border: 2px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .cell:hover {
+            background-color: #f9f9f9;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 600px) {
+            .board {
+                grid-template-columns: repeat(3, 80px);
+                grid-template-rows: repeat(3, 80px);
+                gap: 3px;
+            }
+
+            .cell {
+                width: 80px;
+                height: 80px;
+                font-size: 1.5em;
+            }
+
+            button {
+                font-size: 0.8em;
+                padding: 8px 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .board {
+                grid-template-columns: repeat(3, 50px);
+                grid-template-rows: repeat(3, 50px);
+            }
+
+            .cell {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2em;
+            }
+        }
+
+        .symbol-options {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .symbol-options div {
+            cursor: pointer;
+            padding: 10px;
+            border: 1px solid #000;
+            border-radius: 5px;
+            font-size: 2em;
+            transition: transform 0.2s;
+        }
+
+        .symbol-options div:hover {
+            transform: scale(1.1);
+        }
+
+        .selected {
+            background-color: #ddd;
+        }
+
+        .visible {
+            display: block;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .circle::after {
+            content: "⭕";
+        }
+
+        .square::after {
+            content: "⬜";
+        }
+
+        .lightning::after {
+            content: "⚡";
+        }
+
+        .heart::after {
+            content: "😤";
+        }
+
+        .triangle::after {
+            content: "🔺";
+        }
+
+        .star::after {
+            content: "⭐";
+        }
+
+        .smile::after {
+            content: "😊";
+        }
+
+        .spade::after {
+            content: "😈";
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="selection-screen" class="selection-screen visible">
+            <h1>Select Your Symbols</h1>
+            <div>
+                <h2>Player 1</h2>
+                <div class="symbol-options" id="player1-options">
+                    <div data-symbol="circle">⭕</div>
+                    <div data-symbol="square">⬜</div>
+                    <div data-symbol="lightning">⚡</div>
+                    <div data-symbol="heart">😤</div>
+                </div>
+            </div>
+            <div>
+                <h2>Player 2</h2>
+                <div class="symbol-options" id="player2-options">
+                    <div data-symbol="triangle">🔺</div>
+                    <div data-symbol="star">⭐</div>
+                    <div data-symbol="smile">😊</div>
+                    <div data-symbol="spade">😈</div>
+                </div>
+            </div>
+            <button id="startGameButton" disabled>Start Game</button>
+        </div>
+        <div id="game-screen" class="selection-screen hidden">
+            <h1>Tic Tac Toe</h1>
+            <div class="board" id="board">
+                <div class="cell" data-cell></div>
+                <div class="cell" data-cell></div>
+                <div class="cell" data-cell></div>
+                <div class="cell" data-cell></div>
+                <div class="cell" data-cell></div>
+                <div class="cell" data-cell></div>
+                <div class="cell" data-cell></div>
+                <div class="cell" data-cell></div>
+                <div class="cell" data-cell></div>
+            </div>
+            <button id="restartButton">Restart</button>
+        </div>
+    </div>
+<script>
+const cells = document.querySelectorAll('[data-cell]');
+const board = document.getElementById('board');
+const restartButton = document.getElementById('restartButton');
+const selectionScreen = document.getElementById('selection-screen');
+const gameScreen = document.getElementById('game-screen');
+const player1Options = document.getElementById('player1-options');
+const player2Options = document.getElementById('player2-options');
+const startGameButton = document.getElementById('startGameButton');
+
+let player1Symbol, player2Symbol;
+let player1Class, player2Class;
+let player1Turn;
+
+const WINNING_COMBINATIONS = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+];
+
+player1Options.addEventListener('click', (e) => {
+    if (e.target.dataset.symbol) {
+        player1Symbol = e.target.dataset.symbol;
+        player1Class = player1Symbol;
+        updateSelection(player1Options, e.target);
+        updatePlayer2Options();
+        checkStartGameAvailability();
+    }
+});
+
+player2Options.addEventListener('click', (e) => {
+    if (e.target.dataset.symbol && e.target.dataset.symbol !== player1Symbol) {
+        player2Symbol = e.target.dataset.symbol;
+        player2Class = player2Symbol;
+        updateSelection(player2Options, e.target);
+        checkStartGameAvailability();
+    }
+});
+
+startGameButton.addEventListener('click', () => {
+    if (player1Symbol && player2Symbol) {
+        startGame();
+        selectionScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+    } else {
+        alert('Both players need to select different symbols to start the game.');
+    }
+});
+
+restartButton.addEventListener('click', () => {
+    selectionScreen.classList.remove('hidden');
+    gameScreen.classList.add('hidden');
+    resetBoard();
+    restartGame();
+});
+
+function updateSelection(optionsContainer, selectedElement) {
+    [...optionsContainer.children].forEach(option => {
+        option.classList.remove('selected');
+    });
+    selectedElement.classList.add('selected');
+}
+
+function updatePlayer2Options() {
+    [...player2Options.children].forEach(option => {
+        option.classList.remove('hidden');
+        if (option.dataset.symbol === player1Symbol) {
+            option.classList.add('hidden');
+        }
+    });
+}
+
+function checkStartGameAvailability() {
+    // Enable the start game button only if both players have selected symbols
+    if (player1Symbol && player2Symbol) {
+        startGameButton.disabled = false;
+    } else {
+        startGameButton.disabled = true;
+    }
+}
+
+function startGame() {
+    player1Turn = true;
+    cells.forEach(cell => {
+        cell.classList.remove(player1Class);
+        cell.classList.remove(player2Class);
+        cell.removeEventListener('click', handleClick);
+        cell.addEventListener('click', handleClick, { once: true });
+    });
+    setBoardHoverClass();
+}
+
+function handleClick(e) {
+    const cell = e.target;
+    const currentClass = player1Turn ? player1Class : player2Class;
+    placeMark(cell, currentClass);
+    setTimeout(() => {
+        if (checkWin(currentClass)) {
+            endGame(false);
+        } else if (isDraw()) {
+            endGame(true);
+        } else {
+            swapTurns();
+            setBoardHoverClass();
+        }
+    }, 10); // Small delay to allow rendering of the last mark
+}
+
+function endGame(draw) {
+    if (draw) {
+        alert('Draw!');
+    } else {
+        alert(`${player1Turn ? "Player 1" : "Player 2"} Wins!`);
+    }
+    restartGame();
+}
+
+function isDraw() {
+    return [...cells].every(cell => {
+        return cell.classList.contains(player1Class) || cell.classList.contains(player2Class);
+    });
+}
+
+function placeMark(cell, currentClass) {
+    cell.classList.add(currentClass);
+}
+
+function swapTurns() {
+    player1Turn = !player1Turn;
+}
+
+function setBoardHoverClass() {
+    board.classList.remove(player1Class);
+    board.classList.remove(player2Class);
+    if (player1Turn) {
+        board.classList.add(player1Class);
+    } else {
+        board.classList.add(player2Class);
+    }
+}
+
+function checkWin(currentClass) {
+    return WINNING_COMBINATIONS.some(combination => {
+        return combination.every(index => {
+            return cells[index].classList.contains(currentClass);
+        });
+    });
+}
+
+function resetBoard() {
+    cells.forEach(cell => {
+        cell.classList.remove(player1Class);
+        cell.classList.remove(player2Class);
+    });
+}
+
+function restartGame() {
+    resetBoard();
+    selectionScreen.classList.remove('hidden');
+    gameScreen.classList.add('hidden');
+    player1Symbol = player2Symbol = null;
+    player1Class = player2Class = null;
+    updateSelection(player1Options, null);
+    updateSelection(player2Options, null);
+    [...player2Options.children].forEach(option => {
+        option.classList.remove('hidden');
+    });
+    startGameButton.disabled = true; // Disable the start button until both symbols are selected
+}
+</script>
+</body>
+</html>
